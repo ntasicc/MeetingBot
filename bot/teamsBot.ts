@@ -56,10 +56,10 @@ export class TeamsBot extends TeamsActivityHandler {
         case "/q": { 
           let team_name = txt_array[1];
           if (!(team_name in team_queue)) {
-            team_queue[team_name] = new Array(firstMention);
+            team_queue[team_name] = new Array(firstMention.name);
           }
           else {
-            team_queue[team_name].push(firstMention);
+            team_queue[team_name].push(firstMention.name);
           }
           break;
         }
@@ -74,6 +74,7 @@ export class TeamsBot extends TeamsActivityHandler {
           await context.sendActivity(ret_string);
           break;
         }
+        // QueueOrder
         case "/qO": {
           let team_name = txt_array[1];
           var order = Object.keys(team_queue).indexOf(team_name) + 1;
@@ -84,12 +85,44 @@ export class TeamsBot extends TeamsActivityHandler {
           await context.sendActivity(replyActivity);
           break;
         }
-        /**
-         * case "yourCommand": {
-         *   await context.sendActivity(`Add your response here!`);
-         *   break;
-         * }
-         */
+        // LeaveQueue
+        case "/lQ": {
+          let team_name = txt_array[1];
+
+          if (team_name in team_queue) {
+            team_queue[team_name].remove(firstMention.name);
+          }
+          break;
+        }
+        // NotifyNext
+        case "/nN": {
+          // Nisam siguran da je role admin
+          if (firstMention.role == "admin") {
+            let time = txt_array[1];
+            let team = team_queue[0];
+
+            let members = ""
+            for (const member in team) {
+              members.concat(`<at>${ new TextEncoder().encode(member) }</at> `);
+            }
+
+            const replyActivity = MessageFactory.text(members.concat(` Vas tim treba da bude spreman za ${time} minuta.`));
+            replyActivity.entities = [mention];
+
+            await context.sendActivity(replyActivity);
+            break; 
+          }
+          break;
+        }
+        // RemoveNext
+        case "/rN": {
+          if (firstMention.role == "admin") {
+            let team_name = txt_array[1];
+
+            break;
+          }
+          break;
+        }
       }
 
       // By calling next() you ensure that the next BotHandler is run.
