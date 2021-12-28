@@ -7,6 +7,10 @@ export interface DataInterface {
   likeCount: number
 }
 
+var team_queue = {
+
+}
+
 export class TeamsBot extends TeamsActivityHandler {
   // record the likeCount
   likeCountObj: { likeCount: number };
@@ -28,8 +32,12 @@ export class TeamsBot extends TeamsActivityHandler {
         txt = removedMentionText.toLowerCase().replace(/\n|\r/g, "").trim();
       }
 
+      const mentions = TurnContext.getMentions(context.activity);
+      const firstMention = mentions[0].mentioned;
+
       // Trigger command by IM text
-      switch (txt) {
+      let txt_array = txt.split(" ")
+      switch (txt_array[0]) {
         case "welcome": {
           const card = AdaptiveCards.declareWithoutData(rawWelcomeCard).render();
           await context.sendActivity({ attachments: [CardFactory.adaptiveCard(card)] });
@@ -39,6 +47,28 @@ export class TeamsBot extends TeamsActivityHandler {
           this.likeCountObj.likeCount = 0;
           const card = AdaptiveCards.declare<DataInterface>(rawLearnCard).render(this.likeCountObj);
           await context.sendActivity({ attachments: [CardFactory.adaptiveCard(card)] });
+          break;
+        }
+        // Queue [Ime tima]
+        case "/q": { 
+          let team_name = txt_array[1];
+          if (!(team_name in team_queue)) {
+            team_queue[team_name] = new Array(firstMention);
+          }
+          else {
+            team_queue[team_name].push(firstMention);
+          }
+          break;
+        }
+        // ShowQueue
+        case "/sQ": {
+          let ret_string = "";
+          let i = 1;
+          for (const team in team_queue) {
+            ret_string.concat(i.toString(), ": ", team, "\n");
+            i++;
+          }
+          await context.sendActivity(ret_string);
           break;
         }
         /**
