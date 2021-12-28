@@ -1,4 +1,4 @@
-import { TeamsActivityHandler, CardFactory, TurnContext, AdaptiveCardInvokeValue, AdaptiveCardInvokeResponse} from "botbuilder";
+import { TeamsActivityHandler, CardFactory, TurnContext, AdaptiveCardInvokeValue, AdaptiveCardInvokeResponse, Mention, MessageFactory } from "botbuilder";
 import rawWelcomeCard from "./adaptiveCards/welcome.json"
 import rawLearnCard from "./adaptiveCards/learn.json"
 import { AdaptiveCards } from "@microsoft/adaptivecards-tools";
@@ -32,8 +32,11 @@ export class TeamsBot extends TeamsActivityHandler {
         txt = removedMentionText.toLowerCase().replace(/\n|\r/g, "").trim();
       }
 
-      const mentions = TurnContext.getMentions(context.activity);
-      const firstMention = mentions[0].mentioned;
+      let firstMention = context.activity.from;
+      const mention = {
+        mentioned: firstMention,
+        text: "",
+      } as Mention;
 
       // Trigger command by IM text
       let txt_array = txt.split(" ")
@@ -69,6 +72,16 @@ export class TeamsBot extends TeamsActivityHandler {
             i++;
           }
           await context.sendActivity(ret_string);
+          break;
+        }
+        case "/qO": {
+          let team_name = txt_array[1];
+          var order = Object.keys(team_queue).indexOf(team_name) + 1;
+          
+          const replyActivity = MessageFactory.text(`<at>${ new TextEncoder().encode(firstMention.name) }</at> Redni broj tima ${team_name} je: ${order}.`);
+          replyActivity.entities = [mention];
+
+          await context.sendActivity(replyActivity);
           break;
         }
         /**

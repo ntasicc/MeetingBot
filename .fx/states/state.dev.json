@@ -1,0 +1,41 @@
+{
+    "solution": {
+        "provisionSucceeded": true,
+        "resourceNameSuffix": "ac3504",
+        "resourceGroupName": "MeetingBot-dev-rg",
+        "tenantId": "f5501f2a-b2b9-4122-8f2d-aa0f0366d907",
+        "subscriptionId": "9d9e0d32-6490-480a-8f2e-b7ea4930e7a1",
+        "subscriptionName": "Azure for Students",
+        "location": "North Europe",
+        "teamsAppTenantId": "f5501f2a-b2b9-4122-8f2d-aa0f0366d907"
+    },
+    "fx-resource-identity": {
+        "identityName": "meetingbotdevc4e165",
+        "identityResourceId": "/subscriptions/9d9e0d32-6490-480a-8f2e-b7ea4930e7a1/resourceGroups/MeetingBot-dev-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/meetingbotdevc4e165",
+        "identityClientId": "5f10dfa0-9e45-40cd-a62c-4600ee7ba1dc"
+    },
+    "fx-resource-bot": {
+        "botId": "25e8730b-a5a2-4c62-8f69-8c3ea3cf1fa8",
+        "objectId": "50f9298c-942b-4812-ba6f-c4295dcdc8fa",
+        "skuName": "F1",
+        "siteName": "meetingbotdevc4e165bot",
+        "validDomain": "meetingbotdevc4e165bot.azurewebsites.net",
+        "appServicePlanName": "meetingbotdevc4e165bot",
+        "botWebAppResourceId": "/subscriptions/9d9e0d32-6490-480a-8f2e-b7ea4930e7a1/resourceGroups/MeetingBot-dev-rg/providers/Microsoft.Web/sites/meetingbotdevc4e165bot",
+        "siteEndpoint": "https://meetingbotdevc4e165bot.azurewebsites.net",
+        "botPassword": "{{fx-resource-bot.botPassword}}"
+    },
+    "fx-resource-aad-app-for-teams": {
+        "clientId": "4f70af2a-29ce-4698-933d-266b6a1bdae8",
+        "objectId": "504dd4a4-6ef9-49a8-abac-739c56ef80fc",
+        "oauth2PermissionScopeId": "d662fc59-38d7-4e95-88fd-71091eec9ff1",
+        "tenantId": "f5501f2a-b2b9-4122-8f2d-aa0f0366d907",
+        "oauthHost": "https://login.microsoftonline.com",
+        "oauthAuthority": "https://login.microsoftonline.com/f5501f2a-b2b9-4122-8f2d-aa0f0366d907",
+        "applicationIdUris": "api://botid-25e8730b-a5a2-4c62-8f69-8c3ea3cf1fa8",
+        "clientSecret": "{{fx-resource-aad-app-for-teams.clientSecret}}"
+    },
+    "fx-resource-appstudio": {
+        "teamsAppId": "ef986bae-9cb5-4e58-b8be-10cf91084c0e"
+    }
+}
