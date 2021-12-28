@@ -1,0 +1,20 @@
+{
+    "name": "MeetingBot",
+    "version": "0.0.1",
+    "description": "",
+    "author": "",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "install:bot": "cd bot && npm install",
+        "installAll": "npm run install:bot"
+    },
+    "devDependencies": {
+        "@microsoft/teamsfx-cli": "0.*"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "@microsoft/adaptivecards-tools": "^0.1.2",
+        "adaptivecards": "^2.10.0",
+        "botbuilder": "^4.15.0"
+    }
+}
