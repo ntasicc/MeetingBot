@@ -48,6 +48,10 @@ export class TeamsBot extends TeamsActivityHandler {
 
       // Trigger command by IM text
       let txt_array = txt.split(' ')
+
+      //Dozvola za dodavanje novog tima
+      let enableQueue = true
+
       switch (txt_array[0]) {
         case 'welcome': {
           const card = AdaptiveCards.declareWithoutData(rawWelcomeCard).render()
@@ -66,13 +70,19 @@ export class TeamsBot extends TeamsActivityHandler {
           })
           break
         }
+
         // Queue [Ime tima]
         case '/q': {
-          let team_name = txt_array[1]
-          if (!(team_name in team_queue)) {
-            team_queue[team_name] = new Array(firstMention.name)
+          if (enableQueue) {
+            let team_name = txt_array[1]
+            if (!(team_name in team_queue)) {
+              team_queue[team_name] = new Array(firstMention.name)
+            } else {
+              team_queue[team_name].push(firstMention.name)
+            }
           } else {
-            team_queue[team_name].push(firstMention.name)
+            let poruka = 'Istekao je rok za prijavu tima.'
+            await context.sendActivity(poruka)
           }
           break
         }
@@ -87,6 +97,7 @@ export class TeamsBot extends TeamsActivityHandler {
           await context.sendActivity(ret_string)
           break
         }
+
         // QueueOrder
         case '/qO': {
           let team_name = txt_array[1]
@@ -136,6 +147,7 @@ export class TeamsBot extends TeamsActivityHandler {
           }
           break
         }
+
         // RemoveNext
         case '/rN': {
           if (firstMention.role == 'Owner') {
@@ -146,11 +158,93 @@ export class TeamsBot extends TeamsActivityHandler {
 
         //NotifyAll
         case '/nA': {
-          let poruka = txt_array[1]
-          let channel = context.activity.channelData
-          //Ne znam da li channelData ima name atribut pa da tagujemo kanal
+          if (firstMention.role == 'Owner') {
+            let poruka = txt_array[1]
+            let channel = context.activity.channelData.channel.name
+
+            const replyActivity = MessageFactory.text(
+              `<at>${new TextEncoder().encode(channel)}</at> ${poruka}.`
+            )
+            replyActivity.entities = [mention]
+            await context.sendActivity(replyActivity)
+          }
           break
         }
+
+        //Break
+        case '/b': {
+          if (firstMention.role == 'Owner') {
+            let vreme = txt_array[1]
+            let channel = context.activity.channelData.channel.name
+
+            const replyActivity = MessageFactory.text(
+              `<at>${new TextEncoder().encode(
+                channel
+              )}</at> Pravi se pauza, nastavljamo za ${vreme} minuta.`
+            )
+            replyActivity.entities = [mention]
+            await context.sendActivity(replyActivity)
+          }
+          break
+        }
+
+        //EnableQueueJoin [Tacno/Netacno]
+        case '/eQ': {
+          if (firstMention.role == 'Owner') {
+            let test = txt_array[1]
+            let channel = context.activity.channelData.channel.name
+            let poruka = ''
+
+            if (test.localeCompare('Tacno')) {
+              enableQueue = true
+              poruka = 'Otvorena je prijava timova.'
+            } else if (test.localeCompare('Netacno')) {
+              enableQueue = false
+              poruka = 'Prijava tima zavrsena.'
+            }
+
+            const replyActivity = MessageFactory.text(
+              `<at>${new TextEncoder().encode(channel)}</at> ${poruka}`
+            )
+            replyActivity.entities = [mention]
+            await context.sendActivity(replyActivity)
+          }
+          break
+        }
+
+        //Help
+        case '/help':
+          {
+            if (firstMention.role == 'Member') {
+              let poruka =
+                '1. /q [Ime tima] - Ovom komandom se korisnik dodaje u tim [Ime tima] ako postoji ili se kreira novi tim i korisnik je prvi clan tog tima' +
+                '\n' +
+                '2. /qO [Ime tima] - Vraca se pozicija tima (Ime tima) u redu cekanja' +
+                '\n' +
+                '3. /lQ [Ime tima] - Korisnik napusta tim (Ime tima) i tim se brise ako nema vise clanova' +
+                '\n' +
+                '4. /sQ - Prikazuje se ceo red cekanja'
+
+              await context.sendActivity(poruka)
+            } else if (firstMention.role == 'Owner') {
+              let poruka =
+                '1. /nN [Vreme] - Obavestava se sledeci tim da treba da udju za [Vreme] minuta' +
+                '\n' +
+                '2. /nA [Poruka] - Salje se poruka svim clanovima tima' +
+                '\n' +
+                '3. /b [Vreme] - Obavestavaju se timovi o pauzi koja traje [Vreme] minuta' +
+                '\n' +
+                '4. /rN  - Uklanja se tim sa vrha reda' +
+                '\n' +
+                '5. /eQ [Tacno/Netacno] - Otvara (zatvara) se red za prijavu timova' +
+                '\n' +
+                '6. /sQ - Prikazuje se ceo red cekanja' +
+                '\n' +
+                '7. /cT [Naredba] [novaPoruka] - Menja se trenutna templejtska poruka sa novom (novaPoruka) za odredjenu funkciju (Naredba)'
+              await context.sendActivity(poruka)
+            }
+          }
+          break
       }
 
       // By calling next() you ensure that the next BotHandler is run.
