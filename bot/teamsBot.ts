@@ -48,6 +48,10 @@ export class TeamsBot extends TeamsActivityHandler {
 
       // Trigger command by IM text
       let txt_array = txt.split(' ')
+      let poruka = txt.slice(txt_array[0].length);
+      let temp_break = "Pravi se pauza, nastavljamo za"
+      let temp_notify = "Vas tim treba da bude spreman za"
+
 
       //Dozvola za dodavanje novog tima
       let enableQueue = true
@@ -137,13 +141,12 @@ export class TeamsBot extends TeamsActivityHandler {
 
             const replyActivity = MessageFactory.text(
               members.concat(
-                ` Vas tim treba da bude spreman za ${time} minuta.`
+                ` ${temp_notify} ${time} minuta.`
               )
             )
             replyActivity.entities = [mention]
 
             await context.sendActivity(replyActivity)
-            break
           }
           break
         }
@@ -159,7 +162,6 @@ export class TeamsBot extends TeamsActivityHandler {
         //NotifyAll
         case '/nA': {
           if (firstMention.role == 'Owner') {
-            let poruka = txt_array[1]
             let channel = context.activity.channelData.channel.name
 
             const replyActivity = MessageFactory.text(
@@ -180,7 +182,7 @@ export class TeamsBot extends TeamsActivityHandler {
             const replyActivity = MessageFactory.text(
               `<at>${new TextEncoder().encode(
                 channel
-              )}</at> Pravi se pauza, nastavljamo za ${vreme} minuta.`
+              )}</at> ${temp_break} ${vreme} minuta.`
             )
             replyActivity.entities = [mention]
             await context.sendActivity(replyActivity)
@@ -210,6 +212,19 @@ export class TeamsBot extends TeamsActivityHandler {
             await context.sendActivity(replyActivity)
           }
           break
+        }
+
+        // ChangeTemplate
+        case "/cT": {
+          if (firstMention.role == 'Owner') {
+            if (txt_array[1] == "/b") {
+              temp_break = poruka.slice(txt_array[1].length);
+            }
+            else if (txt_array[1] == "/nN") {
+              temp_notify = poruka.slice(txt_array[1].length);
+            }
+          }
+          break;
         }
 
         //Help
