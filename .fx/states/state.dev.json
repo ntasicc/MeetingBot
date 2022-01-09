@@ -36,6 +36,6 @@
         "clientSecret": "{{fx-resource-aad-app-for-teams.clientSecret}}"
     },
     "fx-resource-appstudio": {
-        "teamsAppId": "ef986bae-9cb5-4e58-b8be-10cf91084c0e"
+        "teamsAppId": "1c93fccc-bfbf-417f-8e00-37b6f1ad8ad2"
     }
 }

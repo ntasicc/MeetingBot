@@ -18,6 +18,8 @@ export interface DataInterface {
 }
 
 var team_queue = {}
+var new_queue = []
+var rec
 
 export class TeamsBot extends TeamsActivityHandler {
   // record the likeCount
@@ -74,9 +76,33 @@ export class TeamsBot extends TeamsActivityHandler {
           })
           break
         }
+        case 'pomoc': {
+          this.likeCountObj.likeCount = 0
+          const card = AdaptiveCards.declare<DataInterface>(
+            rawLearnCard
+          ).render(this.likeCountObj)
+          await context.sendActivity("pomoc")
+          break
+        }
+        case 'queue': {
+          rec = txt_array[1]
+          await context.sendActivity(`Dodali ste tim ${rec} u red cekanja.`)
+          break
+        }
+        case 'showQueue': {
+          let team_name = `Novi tim je ${rec}`
+          await context.sendActivity(team_name)
+          break
+        }
+        case 'showQueue2': {
+          let team_name = "Ovo je tim "
+          team_name.concat(`${rec}`)
+          await context.sendActivity(team_name)
+          break
+        }
 
         // Queue [Ime tima]
-        case '/q': {
+        case 'q': {
           if (enableQueue) {
             let team_name = txt_array[1]
             if (!(team_name in team_queue)) {
@@ -91,8 +117,8 @@ export class TeamsBot extends TeamsActivityHandler {
           break
         }
         // ShowQueue
-        case '/sQ': {
-          let ret_string = ''
+        case 'sQ': {
+          let ret_string = 'Bri'
           let i = 1
           for (const team in team_queue) {
             ret_string.concat(i.toString(), ': ', team, '\n')
@@ -103,7 +129,7 @@ export class TeamsBot extends TeamsActivityHandler {
         }
 
         // QueueOrder
-        case '/qO': {
+        case 'qO': {
           let team_name = txt_array[1]
           var order = Object.keys(team_queue).indexOf(team_name) + 1
 
@@ -118,7 +144,7 @@ export class TeamsBot extends TeamsActivityHandler {
           break
         }
         // LeaveQueue
-        case '/lQ': {
+        case 'lQ': {
           let team_name = txt_array[1]
 
           if (team_name in team_queue) {
@@ -129,7 +155,7 @@ export class TeamsBot extends TeamsActivityHandler {
           break
         }
         // NotifyNext
-        case '/nN': {
+        case 'nN': {
           if (firstMention.role == 'Owner') {
             let time = txt_array[1]
             let team = team_queue[0]
@@ -152,7 +178,7 @@ export class TeamsBot extends TeamsActivityHandler {
         }
 
         // RemoveNext
-        case '/rN': {
+        case 'rN': {
           if (firstMention.role == 'Owner') {
             delete team_queue[0]
           }
@@ -160,7 +186,7 @@ export class TeamsBot extends TeamsActivityHandler {
         }
 
         //NotifyAll
-        case '/nA': {
+        case 'nA': {
           if (firstMention.role == 'Owner') {
             let channel = context.activity.channelData.channel.name
 
@@ -174,7 +200,7 @@ export class TeamsBot extends TeamsActivityHandler {
         }
 
         //Break
-        case '/b': {
+        case 'b': {
           if (firstMention.role == 'Owner') {
             let vreme = txt_array[1]
             let channel = context.activity.channelData.channel.name
@@ -191,7 +217,7 @@ export class TeamsBot extends TeamsActivityHandler {
         }
 
         //EnableQueueJoin [Tacno/Netacno]
-        case '/eQ': {
+        case 'eQ': {
           if (firstMention.role == 'Owner') {
             let test = txt_array[1]
             let channel = context.activity.channelData.channel.name
@@ -215,7 +241,7 @@ export class TeamsBot extends TeamsActivityHandler {
         }
 
         // ChangeTemplate
-        case "/cT": {
+        case "cT": {
           if (firstMention.role == 'Owner') {
             if (txt_array[1] == "/b") {
               temp_break = poruka.slice(txt_array[1].length);
@@ -228,7 +254,7 @@ export class TeamsBot extends TeamsActivityHandler {
         }
 
         //Help
-        case '/help':
+        case 'help':
           {
             if (firstMention.role == 'Member') {
               let poruka =
