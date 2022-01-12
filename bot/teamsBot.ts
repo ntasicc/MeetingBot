@@ -18,12 +18,15 @@ export interface DataInterface {
 }
 
 var team_queue = {}
-var new_queue = []
 var rec
+
+
 
 export class TeamsBot extends TeamsActivityHandler {
   // record the likeCount
   likeCountObj: { likeCount: number }
+
+
 
   constructor() {
     super()
@@ -31,6 +34,102 @@ export class TeamsBot extends TeamsActivityHandler {
     this.likeCountObj = { likeCount: 0 }
 
     this.onMessage(async (context, next) => {
+
+      var Connection = require("tedious").Connection;
+      var config = {
+        server: "v4botdb.database.windows.net", //update me
+        authentication: {
+          type: "default",
+          options: {
+            userName: "v4botsql", //update me
+            password: "V4teamsbot!", //update me
+          },
+        },
+        options: {
+          // If you are on Microsoft Azure, you need encryption:
+          encrypt: true,
+          database: "BotDB", //update me
+        },
+      };
+  
+      var connection = new Connection(config);
+      var Request = require("tedious").Request;
+      var TYPES = require("tedious").TYPES;
+  
+      function addUser(teamsID, firstName, lastName, teamName) {
+        let request = new Request(
+          "INSERT INTO Users(TeamsID, FirstName, LastName, TeamName) VALUES (@TeamsID, @FirstName, @LastName, @TeamName);",
+          function (err) {
+            if (err) {
+              console.log(err);
+            }
+          }
+        );
+        request.addParameter("TeamsID", TYPES.NVarChar, teamsID);
+        request.addParameter("FirstName", TYPES.NVarChar, firstName);
+        request.addParameter("LastName", TYPES.NVarChar, lastName);
+        request.addParameter("TeamName", TYPES.NVarChar, teamName);
+  
+        // Close the connection after the final event emitted by the request, after the callback passes
+        request.on("requestCompleted", function () {
+          connection.close();
+        });
+        connection.execSql(request);
+      }
+  
+      function addTeam(teamtName) {
+        let request = new Request(
+          "INSERT INTO Teams(TeamtName) VALUES (@TeamtName);",
+          function (err) {
+            if (err) {
+              console.log(err);
+            }
+          }
+        );
+        request.addParameter("TeamtName", TYPES.NVarChar, teamtName);
+  
+        // Close the connection after the final event emitted by the request, after the callback passes
+        request.on("requestCompleted", function () {
+          connection.close();
+        });
+        connection.execSql(request);
+      }
+  
+      function getUser() {
+        let request = new Request("SELECT * FROM Users;", function (err) {
+          if (err) {
+            console.log(err);
+          }
+        });
+        var result = "";
+        request.on("row", function (columns) {
+          columns.forEach(function (column) {
+            if (column.value === null) {
+              console.log("NULL");
+            } else {
+              result += column.value + " ";
+            }
+          });
+          console.log(result);
+          result = "";
+        });
+  
+        request.on("done", function (rowCount, more) {
+          console.log(rowCount + " rows returned");
+        });
+  
+        // Close the connection after the final event emitted by the request, after the callback passes
+        request.on("requestCompleted", function (rowCount, more) {
+          connection.close();
+        });
+        connection.execSql(request);
+      }
+  
+  
+  
+  
+
+
       console.log('Running with Message Activity.')
 
       let txt = context.activity.text
@@ -76,19 +175,36 @@ export class TeamsBot extends TeamsActivityHandler {
           })
           break
         }
-        case 'pomoc': {
-          this.likeCountObj.likeCount = 0
-          const card = AdaptiveCards.declare<DataInterface>(
-            rawLearnCard
-          ).render(this.likeCountObj)
-          await context.sendActivity("pomoc")
-          break
-        }
         case 'queue': {
-          rec = txt_array[1]
-          await context.sendActivity(`Dodali ste tim ${rec} u red cekanja.`)
+          let team_name = txt_array[1]
+
+          const replyActivity = MessageFactory.text(
+            `<at>${firstMention.name}</at> Redni broj tima ${team_name} je: 1.`
+          )
+          replyActivity.entities = [mention]
+
+          connection.on("connect", (err) => {
+            if (err) {
+              console.error(err.message);
+            } else {
+              addUser(firstMention.id, firstMention.name.split(" ")[0], firstMention.name.split(" ")[1], team_name);
+            }
+          });
+          
+          connection.connect();
+
+          connection.connect();
+          const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+          const yourFunction = async () => {
+            await delay(5000);
+            await context.sendActivity(replyActivity)
+          };
+          yourFunction();
+          
           break
         }
+
+
         case 'showQueue': {
           let team_name = `Novi tim je ${rec}`
           await context.sendActivity(team_name)
@@ -100,7 +216,6 @@ export class TeamsBot extends TeamsActivityHandler {
           await context.sendActivity(team_name)
           break
         }
-
         // Queue [Ime tima]
         case 'q': {
           if (enableQueue) {

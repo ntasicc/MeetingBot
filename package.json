@@ -15,6 +15,7 @@
     "dependencies": {
         "@microsoft/adaptivecards-tools": "^0.1.2",
         "adaptivecards": "^2.10.0",
-        "botbuilder": "^4.15.0"
+        "botbuilder": "^4.15.0",
+        "tedious": "^14.0.0"
     }
 }
