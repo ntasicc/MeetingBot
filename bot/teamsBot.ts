@@ -35,26 +35,7 @@ export class TeamsBot extends TeamsActivityHandler {
 
     this.onMessage(async (context, next) => {
 
-      var Connection = require("tedious").Connection;
-      var config = {
-        server: "v4botdb.database.windows.net", //update me
-        authentication: {
-          type: "default",
-          options: {
-            userName: "v4botsql", //update me
-            password: "V4teamsbot!", //update me
-          },
-        },
-        options: {
-          // If you are on Microsoft Azure, you need encryption:
-          encrypt: true,
-          database: "BotDB", //update me
-        },
-      };
-  
-      var connection = new Connection(config);
-      var Request = require("tedious").Request;
-      var TYPES = require("tedious").TYPES;
+
   
       function addUser(teamsID, firstName, lastName, teamName) {
         let request = new Request(
@@ -129,7 +110,7 @@ export class TeamsBot extends TeamsActivityHandler {
   
   
 
-
+      var promenljiva = ""
       console.log('Running with Message Activity.')
 
       let txt = context.activity.text
@@ -177,29 +158,75 @@ export class TeamsBot extends TeamsActivityHandler {
         }
         case 'queue': {
           let team_name = txt_array[1]
-
-          const replyActivity = MessageFactory.text(
-            `<at>${firstMention.name}</at> Redni broj tima ${team_name} je: 1.`
-          )
-          replyActivity.entities = [mention]
-
+          
+          var Connection = require("tedious").Connection;
+          var config = {
+            server: "v4botdb.database.windows.net", //update me
+            authentication: {
+              type: "default",
+              options: {
+                userName: "v4botsql", //update me
+                password: "V4teamsbot!", //update me
+              },
+            },
+            options: {
+              // If you are on Microsoft Azure, you need encryption:
+              encrypt: true,
+              database: "BotDB", //update me
+            },
+          };
+      
+          var connection = new Connection(config);
+          var Request = require("tedious").Request;
+          var TYPES = require("tedious").TYPES;
+          
           connection.on("connect", (err) => {
             if (err) {
               console.error(err.message);
             } else {
-              addUser(firstMention.id, firstMention.name.split(" ")[0], firstMention.name.split(" ")[1], team_name);
+              let request = new Request(
+                "INSERT INTO Teams(TeamtName) VALUES (@TeamtName);",
+                function (err) {
+                  if (err) {
+                    console.log(err);
+                  }
+                }
+              );
+              request.addParameter("TeamtName", TYPES.NVarChar, team_name);
+        
+              // Close the connection after the final event emitted by the request, after the callback passes
+              request.on("requestCompleted", function () {
+                connection.close();
+              });
+              connection.execSql(request);
+
+              const replyActivity = MessageFactory.text(
+                `<at>${firstMention.name}</at> Redni broj tima ${team_name} je: 1.`
+              )
+              replyActivity.entities = [mention]
+              context.sendActivity(replyActivity)
             }
           });
+          connection.connect();
           
-          connection.connect();
+          team_name += "2345"
+          const replyActivity = MessageFactory.text(
+            `<at>${firstMention.name}</at> Redni broj tima ${team_name} je: 1.`
+          )
+          replyActivity.entities = [mention]
+          await context.sendActivity(replyActivity)
+          break
+        }
 
-          connection.connect();
-          const delay = (ms) => new Promise((res) => setTimeout(res, ms));
-          const yourFunction = async () => {
-            await delay(5000);
-            await context.sendActivity(replyActivity)
-          };
-          yourFunction();
+        case 'queue3': {
+          let team_name = txt_array[1]
+          promenljiva += team_name
+
+          const replyActivity = MessageFactory.text(
+            `<at>${firstMention.name}</at> Redni broj tima ${promenljiva} je: 1.`
+          )
+          replyActivity.entities = [mention]
+          await context.sendActivity(replyActivity)
           
           break
         }
