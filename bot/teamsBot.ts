@@ -11,106 +11,85 @@ import {
 } from 'botbuilder'
 import rawWelcomeCard from './adaptiveCards/welcome.json'
 import rawLearnCard from './adaptiveCards/learn.json'
+import rawQueueCard from './adaptiveCards/queue.json'
+import rawShowQueueCard from './adaptiveCards/showQueue.json'
+import rawQueueOrderCard from './adaptiveCards/queueOrder.json'
+import rawLeaveQueueCard from './adaptiveCards/leaveQueue.json'
+import rawRemoveNextCard from './adaptiveCards/removeNext.json'
+import rawTestCard from './adaptiveCards/test.json'
+import rawNotifyNextCard from './adaptiveCards/notifyNext.json'
+import rawNotifyAllCard from './adaptiveCards/notifyAll.json'
+import rawBreakCard from './adaptiveCards/break.json'
+import rawTemplateCard from './adaptiveCards/template.json'
 import { AdaptiveCards } from '@microsoft/adaptivecards-tools'
 
 export interface DataInterface {
   likeCount: number
 }
 
+export interface DataInterface {
+  teamQueue: string
+}
+
+export interface DataInterface {
+  teamPosition: number
+}
+
+export interface DataInterface {
+  teamMembers: string
+}
+
+export interface DataInterface {
+  test: string
+}
+
+export interface DataInterface {
+  next: string
+}
+
+export interface DataInterface {
+  notify_message: string
+}
+
+export interface DataInterface {
+  break_message: string
+}
+
+export interface DataInterface {
+  template: string
+}
+
+
 var team_queue = {}
-var rec
-
-
 
 export class TeamsBot extends TeamsActivityHandler {
   // record the likeCount
   likeCountObj: { likeCount: number }
-
+  teamQueueObj: { teamQueue: string }
+  teamPositionObj: { teamPosition: number }
+  teamMembersObj: { teamMembers: string }
+  testObject: { test: string }
+  notifyNextObject: { next: string }
+  notifyAllObject: { notify_message: string }
+  breakObject: { break_message: string }
+  templateObj: { template: string }
 
 
   constructor() {
     super()
 
     this.likeCountObj = { likeCount: 0 }
+    this.teamQueueObj = { teamQueue: '' }
+    this.teamPositionObj = { teamPosition: -1 }
+    this.teamMembersObj = { teamMembers: '' }
+    this.testObject = { test: '' }
+    this.notifyNextObject = { next: '' }
+    this.notifyAllObject = { notify_message: '' }
+    this.breakObject = { break_message: '' }
+    this.templateObj = { template: 'Pravimo pauzu od ' }
 
     this.onMessage(async (context, next) => {
 
-
-  
-      function addUser(teamsID, firstName, lastName, teamName) {
-        let request = new Request(
-          "INSERT INTO Users(TeamsID, FirstName, LastName, TeamName) VALUES (@TeamsID, @FirstName, @LastName, @TeamName);",
-          function (err) {
-            if (err) {
-              console.log(err);
-            }
-          }
-        );
-        request.addParameter("TeamsID", TYPES.NVarChar, teamsID);
-        request.addParameter("FirstName", TYPES.NVarChar, firstName);
-        request.addParameter("LastName", TYPES.NVarChar, lastName);
-        request.addParameter("TeamName", TYPES.NVarChar, teamName);
-  
-        // Close the connection after the final event emitted by the request, after the callback passes
-        request.on("requestCompleted", function () {
-          connection.close();
-        });
-        connection.execSql(request);
-      }
-  
-      function addTeam(teamtName) {
-        let request = new Request(
-          "INSERT INTO Teams(TeamtName) VALUES (@TeamtName);",
-          function (err) {
-            if (err) {
-              console.log(err);
-            }
-          }
-        );
-        request.addParameter("TeamtName", TYPES.NVarChar, teamtName);
-  
-        // Close the connection after the final event emitted by the request, after the callback passes
-        request.on("requestCompleted", function () {
-          connection.close();
-        });
-        connection.execSql(request);
-      }
-  
-      function getUser() {
-        let request = new Request("SELECT * FROM Users;", function (err) {
-          if (err) {
-            console.log(err);
-          }
-        });
-        var result = "";
-        request.on("row", function (columns) {
-          columns.forEach(function (column) {
-            if (column.value === null) {
-              console.log("NULL");
-            } else {
-              result += column.value + " ";
-            }
-          });
-          console.log(result);
-          result = "";
-        });
-  
-        request.on("done", function (rowCount, more) {
-          console.log(rowCount + " rows returned");
-        });
-  
-        // Close the connection after the final event emitted by the request, after the callback passes
-        request.on("requestCompleted", function (rowCount, more) {
-          connection.close();
-        });
-        connection.execSql(request);
-      }
-  
-  
-  
-  
-
-      var promenljiva = ""
       console.log('Running with Message Activity.')
 
       let txt = context.activity.text
@@ -119,7 +98,7 @@ export class TeamsBot extends TeamsActivityHandler {
       )
       if (removedMentionText) {
         // Remove the line break
-        txt = removedMentionText.toLowerCase().replace(/\n|\r/g, '').trim()
+        txt = removedMentionText.replace(/\n|\r/g, '').trim()
       }
 
       let firstMention = context.activity.from
@@ -129,16 +108,14 @@ export class TeamsBot extends TeamsActivityHandler {
       } as Mention
 
       // Trigger command by IM text
-      let txt_array = txt.split(' ')
-      let poruka = txt.slice(txt_array[0].length);
-      let temp_break = "Pravi se pauza, nastavljamo za"
-      let temp_notify = "Vas tim treba da bude spreman za"
+      let splitMessageText = txt.split(' ')
+      let message = txt.slice(splitMessageText[0].length + 1);
 
 
       //Dozvola za dodavanje novog tima
       let enableQueue = true
 
-      switch (txt_array[0]) {
+      switch (splitMessageText[0]) {
         case 'welcome': {
           const card = AdaptiveCards.declareWithoutData(rawWelcomeCard).render()
           await context.sendActivity({
@@ -157,277 +134,177 @@ export class TeamsBot extends TeamsActivityHandler {
           break
         }
         case 'queue': {
-          let team_name = txt_array[1]
-          
-          var Connection = require("tedious").Connection;
-          var config = {
-            server: "v4botdb.database.windows.net", //update me
-            authentication: {
-              type: "default",
-              options: {
-                userName: "v4botsql", //update me
-                password: "V4teamsbot!", //update me
-              },
-            },
-            options: {
-              // If you are on Microsoft Azure, you need encryption:
-              encrypt: true,
-              database: "BotDB", //update me
-            },
-          };
-      
-          var connection = new Connection(config);
-          var Request = require("tedious").Request;
-          var TYPES = require("tedious").TYPES;
-          
-          connection.on("connect", (err) => {
-            if (err) {
-              console.error(err.message);
-            } else {
-              let request = new Request(
-                "INSERT INTO Teams(TeamtName) VALUES (@TeamtName);",
-                function (err) {
-                  if (err) {
-                    console.log(err);
-                  }
-                }
-              );
-              request.addParameter("TeamtName", TYPES.NVarChar, team_name);
-        
-              // Close the connection after the final event emitted by the request, after the callback passes
-              request.on("requestCompleted", function () {
-                connection.close();
-              });
-              connection.execSql(request);
+          let teamName = splitMessageText[1]
 
-              const replyActivity = MessageFactory.text(
-                `<at>${firstMention.name}</at> Redni broj tima ${team_name} je: 1.`
-              )
-              replyActivity.entities = [mention]
-              context.sendActivity(replyActivity)
+          let teams = this.teamQueueObj.teamQueue.split(" ")
+
+
+          if (teams.includes(teamName)) {
+            let team_members = this.teamMembersObj.teamMembers.split(" | ")
+            let tmp = ""
+            let inum = 0
+            for (const i in team_members) {
+              tmp += team_members[i]
+              inum += 1
+              if (team_members[i].includes(teamName)) {
+                tmp += " " + firstMention.name
+              }
+              if (inum < team_members.length) {
+                tmp += " | "
+              }
             }
-          });
-          connection.connect();
+            this.teamMembersObj.teamMembers = tmp
+          }
+          else {
+            this.teamQueueObj.teamQueue += teamName + " "
+            this.teamMembersObj.teamMembers += teamName + ": " + firstMention.name + " | "
+          }
           
-          team_name += "2345"
-          const replyActivity = MessageFactory.text(
-            `<at>${firstMention.name}</at> Redni broj tima ${team_name} je: 1.`
-          )
-          replyActivity.entities = [mention]
-          await context.sendActivity(replyActivity)
+          const card = AdaptiveCards.declare<DataInterface>(
+            rawQueueCard
+          ).render(this.teamQueueObj)
+          await context.sendActivity({
+            attachments: [CardFactory.adaptiveCard(card)],
+          })
+
           break
         }
-
-        case 'queue3': {
-          let team_name = txt_array[1]
-          promenljiva += team_name
-
-          const replyActivity = MessageFactory.text(
-            `<at>${firstMention.name}</at> Redni broj tima ${promenljiva} je: 1.`
-          )
-          replyActivity.entities = [mention]
-          await context.sendActivity(replyActivity)
-          
-          break
-        }
-
-
         case 'showQueue': {
-          let team_name = `Novi tim je ${rec}`
-          await context.sendActivity(team_name)
-          break
-        }
-        case 'showQueue2': {
-          let team_name = "Ovo je tim "
-          team_name.concat(`${rec}`)
-          await context.sendActivity(team_name)
-          break
-        }
-        // Queue [Ime tima]
-        case 'q': {
-          if (enableQueue) {
-            let team_name = txt_array[1]
-            if (!(team_name in team_queue)) {
-              team_queue[team_name] = new Array(firstMention.name)
-            } else {
-              team_queue[team_name].push(firstMention.name)
-            }
-          } else {
-            let poruka = 'Istekao je rok za prijavu tima.'
-            await context.sendActivity(poruka)
-          }
-          break
-        }
-        // ShowQueue
-        case 'sQ': {
-          let ret_string = 'Bri'
-          let i = 1
-          for (const team in team_queue) {
-            ret_string.concat(i.toString(), ': ', team, '\n')
-            i++
-          }
-          await context.sendActivity(ret_string)
-          break
-        }
+          const card = AdaptiveCards.declare<DataInterface>(
+            rawShowQueueCard
+          ).render(this.teamQueueObj)
+          await context.sendActivity({
+            attachments: [CardFactory.adaptiveCard(card)],
+          })
 
-        // QueueOrder
-        case 'qO': {
-          let team_name = txt_array[1]
-          var order = Object.keys(team_queue).indexOf(team_name) + 1
+          break
+        }
+        case 'queueOrder': {
+          let teamName = splitMessageText[1]
+          this.teamPositionObj.teamPosition =
+            this.teamQueueObj.teamQueue.split(' ').indexOf(teamName) + 1
 
-          const replyActivity = MessageFactory.text(
-            `<at>${new TextEncoder().encode(
-              firstMention.name
-            )}</at> Redni broj tima ${team_name} je: ${order}.`
+          const card = AdaptiveCards.declare<DataInterface>(
+            rawQueueOrderCard
+          ).render(this.teamPositionObj)
+          await context.sendActivity({
+            attachments: [CardFactory.adaptiveCard(card)],
+          })
+
+          break
+        }
+        case 'test': {
+          this.testObject.test = this.teamMembersObj.teamMembers
+          const card = AdaptiveCards.declare<DataInterface>(rawTestCard).render(
+            this.testObject
           )
-          replyActivity.entities = [mention]
+          await context.sendActivity({
+            attachments: [CardFactory.adaptiveCard(card)],
+          })
 
-          await context.sendActivity(replyActivity)
           break
         }
-        // LeaveQueue
-        case 'lQ': {
-          let team_name = txt_array[1]
+        case 'leaveQueue': {
+          let teamName = splitMessageText[1]
 
-          if (team_name in team_queue) {
-            if (team_queue[team_name].length == 1) {
-              delete team_queue[team_name]
-            } else team_queue[team_name].remove(firstMention.name)
-          }
-          break
-        }
-        // NotifyNext
-        case 'nN': {
-          if (firstMention.role == 'Owner') {
-            let time = txt_array[1]
-            let team = team_queue[0]
+          let team_members = this.teamMembersObj.teamMembers.split(" | ")
+          var tmp = ""
+          let found = false
 
-            let members = ''
-            for (const member in team) {
-              members.concat(`<at>${new TextEncoder().encode(member)}</at> `)
+          var inum = 0
+          for (const i in team_members) {
+            inum += 1
+            if (team_members[i].includes(teamName) && team_members[i].includes(firstMention.name)) {
+              found = true
+              let ind = team_members[i].indexOf(firstMention.name)
+              tmp += team_members[i].slice(0, ind) + team_members[i].slice(ind + firstMention.name.length)
             }
-
-            const replyActivity = MessageFactory.text(
-              members.concat(
-                ` ${temp_notify} ${time} minuta.`
-              )
-            )
-            replyActivity.entities = [mention]
-
-            await context.sendActivity(replyActivity)
-          }
-          break
-        }
-
-        // RemoveNext
-        case 'rN': {
-          if (firstMention.role == 'Owner') {
-            delete team_queue[0]
-          }
-          break
-        }
-
-        //NotifyAll
-        case 'nA': {
-          if (firstMention.role == 'Owner') {
-            let channel = context.activity.channelData.channel.name
-
-            const replyActivity = MessageFactory.text(
-              `<at>${new TextEncoder().encode(channel)}</at> ${poruka}.`
-            )
-            replyActivity.entities = [mention]
-            await context.sendActivity(replyActivity)
-          }
-          break
-        }
-
-        //Break
-        case 'b': {
-          if (firstMention.role == 'Owner') {
-            let vreme = txt_array[1]
-            let channel = context.activity.channelData.channel.name
-
-            const replyActivity = MessageFactory.text(
-              `<at>${new TextEncoder().encode(
-                channel
-              )}</at> ${temp_break} ${vreme} minuta.`
-            )
-            replyActivity.entities = [mention]
-            await context.sendActivity(replyActivity)
-          }
-          break
-        }
-
-        //EnableQueueJoin [Tacno/Netacno]
-        case 'eQ': {
-          if (firstMention.role == 'Owner') {
-            let test = txt_array[1]
-            let channel = context.activity.channelData.channel.name
-            let poruka = ''
-
-            if (test.localeCompare('Tacno')) {
-              enableQueue = true
-              poruka = 'Otvorena je prijava timova.'
-            } else if (test.localeCompare('Netacno')) {
-              enableQueue = false
-              poruka = 'Prijava tima zavrsena.'
+            else {
+              tmp += team_members[i]
             }
-
-            const replyActivity = MessageFactory.text(
-              `<at>${new TextEncoder().encode(channel)}</at> ${poruka}`
-            )
-            replyActivity.entities = [mention]
-            await context.sendActivity(replyActivity)
-          }
-          break
-        }
-
-        // ChangeTemplate
-        case "cT": {
-          if (firstMention.role == 'Owner') {
-            if (txt_array[1] == "/b") {
-              temp_break = poruka.slice(txt_array[1].length);
-            }
-            else if (txt_array[1] == "/nN") {
-              temp_notify = poruka.slice(txt_array[1].length);
+            if (inum < team_members.length) {
+              tmp += " | "
             }
           }
-          break;
-        }
 
-        //Help
-        case 'help':
-          {
-            if (firstMention.role == 'Member') {
-              let poruka =
-                '1. /q [Ime tima] - Ovom komandom se korisnik dodaje u tim [Ime tima] ako postoji ili se kreira novi tim i korisnik je prvi clan tog tima' +
-                '\n' +
-                '2. /qO [Ime tima] - Vraca se pozicija tima (Ime tima) u redu cekanja' +
-                '\n' +
-                '3. /lQ [Ime tima] - Korisnik napusta tim (Ime tima) i tim se brise ako nema vise clanova' +
-                '\n' +
-                '4. /sQ - Prikazuje se ceo red cekanja'
-
-              await context.sendActivity(poruka)
-            } else if (firstMention.role == 'Owner') {
-              let poruka =
-                '1. /nN [Vreme] - Obavestava se sledeci tim da treba da udju za [Vreme] minuta' +
-                '\n' +
-                '2. /nA [Poruka] - Salje se poruka svim clanovima tima' +
-                '\n' +
-                '3. /b [Vreme] - Obavestavaju se timovi o pauzi koja traje [Vreme] minuta' +
-                '\n' +
-                '4. /rN  - Uklanja se tim sa vrha reda' +
-                '\n' +
-                '5. /eQ [Tacno/Netacno] - Otvara (zatvara) se red za prijavu timova' +
-                '\n' +
-                '6. /sQ - Prikazuje se ceo red cekanja' +
-                '\n' +
-                '7. /cT [Naredba] [novaPoruka] - Menja se trenutna templejtska poruka sa novom (novaPoruka) za odredjenu funkciju (Naredba)'
-              await context.sendActivity(poruka)
-            }
+          if (found) {
+            this.teamMembersObj.teamMembers = tmp
           }
+          else {
+            await context.sendActivity('You are not member of this team')
+
+            break
+          }
+
+          const card =
+            AdaptiveCards.declare<DataInterface>(rawLeaveQueueCard).render()
+          await context.sendActivity({
+            attachments: [CardFactory.adaptiveCard(card)],
+          })
+
           break
+        }
+        case 'notifyNext': {
+          this.notifyNextObject.next = this.teamQueueObj.teamQueue.split(" ")[0]
+
+          const card = AdaptiveCards.declare<DataInterface>(
+            rawNotifyNextCard
+          ).render(this.notifyNextObject)
+          await context.sendActivity({
+            attachments: [CardFactory.adaptiveCard(card)],
+          })
+          break
+        }
+        case 'removeNext': {
+          if (this.teamQueueObj.teamQueue.length > 0) {
+              var team_len = this.teamQueueObj.teamQueue.split(" ")[0].length
+              this.teamQueueObj.teamQueue = this.teamQueueObj.teamQueue.slice(team_len + " ".length)
+              var member_len = this.teamMembersObj.teamMembers.split(" | ")[0].length
+              this.teamMembersObj.teamMembers = this.teamMembersObj.teamMembers.slice(member_len + " | ".length)
+          }
+          else {
+            await context.sendActivity('The queue is empty')
+            break
+          }
+
+          const card =
+            AdaptiveCards.declare<DataInterface>(rawRemoveNextCard).render()
+          await context.sendActivity({
+            attachments: [CardFactory.adaptiveCard(card)],
+          })
+
+          break
+        }
+        case 'notifyAll': {
+          this.notifyAllObject.notify_message = message
+          const card =
+            AdaptiveCards.declare<DataInterface>(rawNotifyAllCard).render(this.notifyAllObject)
+          await context.sendActivity({
+            attachments: [CardFactory.adaptiveCard(card)],
+          })
+
+          break
+        }
+        case 'break': {
+          this.breakObject.break_message = this.templateObj.template + splitMessageText[1] + " minuta."
+          const card =
+            AdaptiveCards.declare<DataInterface>(rawBreakCard).render(this.breakObject)
+          await context.sendActivity({
+            attachments: [CardFactory.adaptiveCard(card)],
+          })
+
+          break
+        }
+        case 'changeTemplate': {
+          this.templateObj.template = message
+          const card =
+            AdaptiveCards.declare<DataInterface>(rawTemplateCard).render(this.templateObj)
+          await context.sendActivity({
+            attachments: [CardFactory.adaptiveCard(card)],
+          })
+
+          break
+        }
       }
 
       // By calling next() you ensure that the next BotHandler is run.
