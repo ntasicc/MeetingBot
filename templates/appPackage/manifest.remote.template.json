@@ -1,69 +1,65 @@
 {
-    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.11/MicrosoftTeams.schema.json",
-    "manifestVersion": "1.11",
-    "version": "1.0.0",
-    "id": "{{state.fx-resource-appstudio.teamsAppId}}",
-    "packageName": "com.microsoft.teams.extension",
-    "developer": {
-        "name": "Teams App, Inc.",
-        "websiteUrl": "{{{state.fx-resource-frontend-hosting.endpoint}}}",
-        "privacyUrl": "{{{state.fx-resource-frontend-hosting.endpoint}}}/index.html#/privacy",
-        "termsOfUseUrl": "{{{state.fx-resource-frontend-hosting.endpoint}}}/index.html#/termsofuse"
-    },
-    "icons": {
-        "color": "resources/color.png",
-        "outline": "resources/outline.png"
-    },
-    "name": {
-        "short": "{{config.manifest.appName.short}}",
-        "full": "{{config.manifest.appName.full}}"
-    },
-    "description": {
-        "short": "Short description of {{config.manifest.appName.short}}",
-        "full": "Full description of {{config.manifest.appName.short}}"
-    },
-    "accentColor": "#FFFFFF",
-    "bots": [
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.11/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.11",
+  "version": "1.0.0",
+  "id": "{{state.fx-resource-appstudio.teamsAppId}}",
+  "packageName": "com.microsoft.teams.extension",
+  "developer": {
+    "name": "V4Team",
+    "websiteUrl": "{{{state.fx-resource-frontend-hosting.endpoint}}}",
+    "privacyUrl": "{{{state.fx-resource-frontend-hosting.endpoint}}}/index.html#/privacy",
+    "termsOfUseUrl": "{{{state.fx-resource-frontend-hosting.endpoint}}}/index.html#/termsofuse"
+  },
+  "icons": {
+    "color": "resources/robot.png",
+    "outline": "resources/robot.png"
+  },
+  "name": {
+    "short": "MeetingBot"
+  },
+  "description": {
+    "short": "Create order in your meeting",
+    "full": "MeetingBot is an app that allows individuals to maintain the flow of a meeting using short commands. The app can let members of a team join the queue under any name and will be called by an organizer when they are next in line. They can also form a group, join a group, see the order in a queue or even leave. As for the owners of a team created in MS Teams, they have wast control over the participants. The owners can notify the next team in line or maybe even the whole lobby, remove team or individual from a queue and prohibit the latecomers to attend a meeting.\nTo get started just add MeetingBot to your team and mention it in the created meeting. For a list of commands, you can type help and before executing the command you need to mention bot first."
+  },
+  "accentColor": "#FFFFFF",
+  "bots": [
+    {
+      "botId": "{{state.fx-resource-bot.botId}}",
+      "scopes": ["personal", "team", "groupchat"],
+      "supportsFiles": false,
+      "isNotificationOnly": false,
+      "commandLists": [
         {
-            "botId": "{{state.fx-resource-bot.botId}}",
-            "scopes": [
-                "personal",
-                "team",
-                "groupchat"
-            ],
-            "supportsFiles": false,
-            "isNotificationOnly": false,
-            "commandLists": [
-                {
-                    "scopes": [
-                        "personal",
-                        "team",
-                        "groupchat"
-                    ],
-                    "commands": [
-                        {
-                            "title": "welcome",
-                            "description": "Resend welcome card of this Bot"
-                        },
-                        {
-                            "title": "learn",
-                            "description": "Learn about Adaptive Card and Bot Command"
-                        }
-                    ]
-                }
-            ]
+          "scopes": ["personal", "team", "groupchat"],
+          "commands": [
+            {
+              "title": "queue",
+              "description": "Create or join an existing team with the name that you provide"
+            },
+            {
+              "title": "queueOrder",
+              "description": "See the place in the queue for your team"
+            },
+            {
+              "title": "showQueue",
+              "description": "List of all teams in queue"
+            },
+            {
+              "title": "leaveQueue",
+              "description": "Leave the team"
+            }
+          ]
         }
-    ],
-    "composeExtensions": [],
-    "configurableTabs": [],
-    "staticTabs": [],
-    "permissions": [
-        "identity",
-        "messageTeamMembers"
-    ],
-    "validDomains": [],
-    "webApplicationInfo": {
-        "id": "{{state.fx-resource-aad-app-for-teams.clientId}}",
-        "resource": "{{{state.fx-resource-aad-app-for-teams.applicationIdUris}}}"
+      ]
     }
+  ],
+  "composeExtensions": [],
+  "configurableTabs": [],
+  "staticTabs": [],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": [],
+  "webApplicationInfo": {
+    "id": "{{state.fx-resource-aad-app-for-teams.clientId}}",
+    "resource": "{{{state.fx-resource-aad-app-for-teams.applicationIdUris}}}"
+  }
 }
