@@ -325,8 +325,29 @@ export class TeamsBot extends TeamsActivityHandler {
           this.breakObject.break_message = ''
           this.templateObj.template = 'Pravimo pauzu od % minuta.'
         }
-        case 'help': {
-          
+        case 'help':
+        {
+              let poruka =
+                '1. queue [Ime tima] - Ovom komandom se korisnik dodaje u tim [Ime tima] ako postoji ili se kreira novi tim i korisnik je prvi clan tog tima' +
+                '\n' +
+                '2. queueOrder [Ime tima] - Vraca se pozicija tima (Ime tima) u redu cekanja' +
+                '\n' +
+                '3. leaveQueue [Ime tima] - Korisnik napusta tim (Ime tima) i tim se brise ako nema vise clanova' +
+                '\n' +
+                '4. showQueue - Prikazuje se ceo red timova koji cekaju' +
+                '\n' +
+                '5. notifyNext [Vreme] - Obavestava se sledeci tim da treba da udju za [Vreme] minuta' +
+                '\n' +
+                '6. break [Vreme] - Obavestavaju se timovi o pauzi koja traje [Vreme] minuta' +
+                '\n' +
+                '7. removeNext  - Uklanja se tim sa vrha reda' +
+                '\n' +
+                '8. showMembers - Prikazuje se ceo red timova sa svojim clanovima koji cekaju' +
+                '\n' +
+                '9. changeTemplate [novaPoruka] - Trenutna templejtska poruka za break naredbu se menja novom koja je prosledjena'
+
+              await context.sendActivity(poruka)
+              break
         }
       }
 
