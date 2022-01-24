@@ -47,6 +47,30 @@
             {
               "title": "leaveQueue",
               "description": "Leave the team"
+            },
+            {
+              "title": "showMembers",
+              "description": "Show all teams with their members"
+            },
+            {
+              "title": "notifyNext",
+              "description": "Notify next team about when they are starting"
+            },
+            {
+              "title": "removeNext",
+              "description": "Remove next team from the queue"
+            },
+            {
+              "title": "break",
+              "description": "Notifies all teams about a break"
+            },
+            {
+              "title": "changeTemplate",
+              "description": "Changes template of break message"
+            },
+            {
+              "title": "clearBot",
+              "description": "Resets bot to initial state. (Clear queue)"
             }
           ]
         }

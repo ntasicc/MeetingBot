@@ -13,7 +13,7 @@
         "facts": [
           {
             "title": "",
-            "value": "${test}"
+            "value": "${members}"
           }
         ]
       }

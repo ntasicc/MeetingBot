@@ -16,7 +16,7 @@ import rawShowQueueCard from './adaptiveCards/showQueue.json'
 import rawQueueOrderCard from './adaptiveCards/queueOrder.json'
 import rawLeaveQueueCard from './adaptiveCards/leaveQueue.json'
 import rawRemoveNextCard from './adaptiveCards/removeNext.json'
-import rawTestCard from './adaptiveCards/test.json'
+import rawShowMembersCard from './adaptiveCards/showMembers.json'
 import rawNotifyNextCard from './adaptiveCards/notifyNext.json'
 import rawNotifyAllCard from './adaptiveCards/notifyAll.json'
 import rawBreakCard from './adaptiveCards/break.json'
@@ -40,7 +40,7 @@ export interface DataInterface {
 }
 
 export interface DataInterface {
-  test: string
+  members: string
 }
 
 export interface DataInterface {
@@ -60,15 +60,13 @@ export interface DataInterface {
 }
 
 
-var team_queue = {}
-
 export class TeamsBot extends TeamsActivityHandler {
   // record the likeCount
   likeCountObj: { likeCount: number }
   teamQueueObj: { teamQueue: string }
   teamPositionObj: { teamPosition: number }
   teamMembersObj: { teamMembers: string }
-  testObject: { test: string }
+  showMembersObject: { members: string }
   notifyNextObject: { next: string }
   notifyAllObject: { notify_message: string }
   breakObject: { break_message: string }
@@ -82,11 +80,11 @@ export class TeamsBot extends TeamsActivityHandler {
     this.teamQueueObj = { teamQueue: '' }
     this.teamPositionObj = { teamPosition: -1 }
     this.teamMembersObj = { teamMembers: '' }
-    this.testObject = { test: '' }
+    this.showMembersObject = { members: '' }
     this.notifyNextObject = { next: '' }
     this.notifyAllObject = { notify_message: '' }
     this.breakObject = { break_message: '' }
-    this.templateObj = { template: 'Pravimo pauzu od ' }
+    this.templateObj = { template: 'Pravimo pauzu od % minuta.' }
 
     this.onMessage(async (context, next) => {
 
@@ -110,10 +108,6 @@ export class TeamsBot extends TeamsActivityHandler {
       // Trigger command by IM text
       let splitMessageText = txt.split(' ')
       let message = txt.slice(splitMessageText[0].length + 1);
-
-
-      //Dozvola za dodavanje novog tima
-      let enableQueue = true
 
       switch (splitMessageText[0]) {
         case 'welcome': {
@@ -176,7 +170,7 @@ export class TeamsBot extends TeamsActivityHandler {
           await context.sendActivity({
             attachments: [CardFactory.adaptiveCard(card)],
           })
-
+          
           break
         }
         case 'queueOrder': {
@@ -193,10 +187,10 @@ export class TeamsBot extends TeamsActivityHandler {
 
           break
         }
-        case 'test': {
-          this.testObject.test = this.teamMembersObj.teamMembers
-          const card = AdaptiveCards.declare<DataInterface>(rawTestCard).render(
-            this.testObject
+        case 'showMembers': {
+          this.showMembersObject.members = this.teamMembersObj.teamMembers
+          const card = AdaptiveCards.declare<DataInterface>(rawShowMembersCard).render(
+            this.showMembersObject
           )
           await context.sendActivity({
             attachments: [CardFactory.adaptiveCard(card)],
@@ -245,7 +239,14 @@ export class TeamsBot extends TeamsActivityHandler {
           break
         }
         case 'notifyNext': {
-          this.notifyNextObject.next = this.teamQueueObj.teamQueue.split(" ")[0]
+          let role = await TeamsInfo.getMember(context, firstMention.id)
+          if (typeof splitMessageText[1] !== 'undefined') {
+            let vreme = splitMessageText[1]
+            this.notifyNextObject.next = "Tim " + this.teamQueueObj.teamQueue.split(" ")[0] + " krece za " + vreme + " minuta."
+          }
+          else {
+            this.notifyNextObject.next = "Tim " + this.teamQueueObj.teamQueue.split(" ")[0] + " je sledeci."
+          }
 
           const card = AdaptiveCards.declare<DataInterface>(
             rawNotifyNextCard
@@ -286,7 +287,15 @@ export class TeamsBot extends TeamsActivityHandler {
           break
         }
         case 'break': {
-          this.breakObject.break_message = this.templateObj.template + splitMessageText[1] + " minuta."
+          if (typeof(splitMessageText[1]) != "undefined") {
+            let time = splitMessageText[1]
+            let template = this.templateObj.template
+            this.breakObject.break_message = template.slice(0, template.indexOf("%")) + time + template.slice(template.indexOf("%") + 1)
+          }
+          else {
+            let template = this.templateObj.template
+            this.breakObject.break_message = template.slice(0, template.indexOf("%")) + "15" + template.slice(template.indexOf("%") + 1)
+          }
           const card =
             AdaptiveCards.declare<DataInterface>(rawBreakCard).render(this.breakObject)
           await context.sendActivity({
@@ -304,6 +313,17 @@ export class TeamsBot extends TeamsActivityHandler {
           })
 
           break
+        }
+        case 'clearBot': {
+          this.likeCountObj.likeCount = 0 
+          this.teamQueueObj.teamQueue = ''
+          this.teamPositionObj.teamPosition = -1
+          this.teamMembersObj.teamMembers = ''
+          this.showMembersObject.members = ''
+          this.notifyNextObject.next = ''
+          this.notifyAllObject.notify_message = ''
+          this.breakObject.break_message = ''
+          this.templateObj.template = 'Pravimo pauzu od % minuta.'
         }
       }
 
