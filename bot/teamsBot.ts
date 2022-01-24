@@ -325,6 +325,9 @@ export class TeamsBot extends TeamsActivityHandler {
           this.breakObject.break_message = ''
           this.templateObj.template = 'Pravimo pauzu od % minuta.'
         }
+        case 'help': {
+          
+        }
       }
 
       // By calling next() you ensure that the next BotHandler is run.
