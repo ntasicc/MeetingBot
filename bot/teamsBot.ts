@@ -324,9 +324,10 @@ export class TeamsBot extends TeamsActivityHandler {
           this.notifyAllObject.notify_message = ''
           this.breakObject.break_message = ''
           this.templateObj.template = 'Pravimo pauzu od % minuta.'
+
+          break
         }
-        case 'help':
-        {
+        case 'help': {
               let poruka =
                 '1. queue [Ime tima] - Ovom komandom se korisnik dodaje u tim [Ime tima] ako postoji ili se kreira novi tim i korisnik je prvi clan tog tima' +
                 '\n' +
@@ -349,6 +350,10 @@ export class TeamsBot extends TeamsActivityHandler {
               await context.sendActivity(poruka)
               break
         }
+        default: {
+            await context.sendActivity("Komanda nije prepoznata.")
+            break
+          }
       }
 
       // By calling next() you ensure that the next BotHandler is run.
